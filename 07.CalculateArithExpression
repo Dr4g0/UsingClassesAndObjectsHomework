@@ -1,0 +1,225 @@
+//* Write a program that calculates the value of given arithmetical expression. The expression can contain the following elements only:
+//Real numbers, e.g. 5, 18.33, 3.14159, 12.6
+//Arithmetic operators: +, -, *, / (standard priorities)
+//Mathematical functions: ln(x), sqrt(x), pow(x,y)
+//Brackets (for changing the default priorities)
+//  Examples:
+//	(3+5.3) * 2.7 - ln(22) / pow(2.2, -1.7) -> ~ 10.6
+//	pow(2, 3.14) * (3 - (3 * sqrt(2) - 3.2) + 1.5*0.3) -> ~ 21.22
+//	Hint: Use the classical "shunting yard" algorithm and "reverse Polish notation".
+
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
+
+class CalculateArithExpression
+{
+    static List<string> operators = new List<string>();
+    static List<string> allTokens = new List<string>();
+    static string[][] priority = {
+                                 new string[]{ "ln", "sqrt", "pow"},
+                                 new string[]{ "*", "/"}, 
+                                 new string[] {"+", "-" }
+                                 };
+    static void Main()
+    {
+        Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+        //Console.WriteLine("Enter the expression:");
+        //string expression = Console.ReadLine();
+        string expression = "pow(2, 3.14) * (3 - (3 * sqrt(2) - 3.2) + 1.5*0.3) ";
+        for (int i = 0; i < expression.Length; i++)
+        {
+            if (expression[i]==' ')
+            {
+                expression=expression.Remove(i, 1);
+                i--;
+            }
+        }
+        //List<string> finalList = ReturnStack(expression);
+        ReturnStack(expression);
+        //for (int i = 0; i < allTokens.Count; i++)
+        //{
+        //    Console.WriteLine(allTokens[i]);
+        //}
+        double finalRezult=CalculateStack();
+        Console.WriteLine("The rezult is: {0}",finalRezult);
+    }
+
+    static void ReturnStack(string expression)
+    {
+        for (int i = 0; i < expression.Length; i++)
+        {
+            string tmpNumber = String.Empty;
+            bool checkForMinusNumber = (expression[i] == '-'&&(i==0||
+                expression[i-1]==','||expression[i-1]=='('));   //there is only 3 cases we've got a minus becaus of minus 
+                                                                //number: in the begining of the expression, 
+                                                                //after a left bracket or after acomma
+            if (CheckForNumber(Convert.ToString(expression[i]))||checkForMinusNumber)
+            {
+                tmpNumber = Convert.ToString(expression[i]);
+                while (CheckForNumber(Convert.ToString(expression[i + 1])) || expression[i + 1] == '.')
+                {
+                    i++;
+                    tmpNumber += Convert.ToString(expression[i]);
+                }
+                allTokens.Add(tmpNumber);
+            }
+            switch (expression[i])
+            {
+                case 'p':
+                    operators.Add("pow");
+                    i += 2;
+                    break;
+                case 's':
+                    operators.Add("sqrt");
+                    i += 3;
+                    break;
+                case 'l':
+                    operators.Add("ln");
+                    i++;
+                    break;
+                case'(':
+                    operators.Add("(");
+                    break;
+                case ')':
+                    ArrangeListsIfRightBracket(operators.Count-1);
+                    break;
+                case '+':
+                case '-':
+                case '*':
+                case '/':
+                    ArrangeDependsPriority(expression[i], operators.Count - 1);
+                    break;
+            }
+        }
+        while (operators.Count>0)
+        {
+            allTokens.Add(operators[operators.Count-1]);
+            operators.RemoveAt(operators.Count - 1);
+        }
+    }
+
+    static bool CheckForNumber(string digitOrNumber)
+    {
+        double tempDigit = 0;
+        bool isNumber = double.TryParse(digitOrNumber, out tempDigit);
+        return isNumber;
+    }
+
+    static void ArrangeListsIfRightBracket(int index)
+    {
+        while (operators[index]!="(")
+        {
+            allTokens.Add(operators[index]);
+            operators.RemoveAt(index);
+            index--;
+        }
+        operators.RemoveAt(index);
+    }
+
+    static void ArrangeDependsPriority(char currOperator,int previousIndex)
+    {
+        while (previousIndex >= 0 && operators[previousIndex] != "(")
+        {
+            int currOperPrior = -1;
+            int prevOperPrior = -1;
+            for (int i = 0; i < priority.GetLength(0); i++)
+            {
+                if (Array.IndexOf(priority[i], Convert.ToString(currOperator)) > -1)
+                {
+                    currOperPrior = i;
+                }
+                if (Array.IndexOf(priority[i], operators[previousIndex]) > -1)
+                {
+                    prevOperPrior = i;
+                }
+            }
+            if (prevOperPrior<=currOperPrior) //if we got equal priority moving the left operator in the final stack
+            {
+                allTokens.Add(operators[previousIndex]);
+                operators.RemoveAt(previousIndex);
+                previousIndex--;
+            }
+            else
+            {
+                break;
+            }
+        }
+        operators.Add(Convert.ToString(currOperator));
+    }
+
+    static double CalculateStack()
+    {
+        double tmpRezult = 0.0;
+        int counter = 0;
+        while (allTokens.Count > 1)
+        {
+            if (!CheckForNumber(allTokens[counter]))
+            {
+                switch (allTokens[counter])
+                {
+                    case "pow":
+                        tmpRezult = Math.Pow(double.Parse(allTokens[counter - 2]), 
+                            double.Parse(allTokens[counter - 1]));
+                        allTokens.RemoveAt(counter);
+                        allTokens.Insert(counter, Convert.ToString(tmpRezult));
+                        allTokens.RemoveAt(counter-1);
+                        allTokens.RemoveAt(counter-2);
+                        break;
+                    case "sqrt":
+                        tmpRezult=Math.Sqrt(double.Parse(allTokens[counter-1]));
+                        allTokens.RemoveAt(counter);
+                        allTokens.Insert(counter, Convert.ToString(tmpRezult));
+                        allTokens.RemoveAt(counter-1);
+                        break;
+                    case "ln":
+                        tmpRezult=Math.Log(double.Parse(allTokens[counter-1]));
+                        allTokens.RemoveAt(counter);
+                        allTokens.Insert(counter, Convert.ToString(tmpRezult));
+                        allTokens.RemoveAt(counter-1);
+                        break;
+                    case "+":
+                         tmpRezult = double.Parse(allTokens[counter - 2])+ 
+                            double.Parse(allTokens[counter - 1]);
+                        allTokens.RemoveAt(counter);
+                        allTokens.Insert(counter, Convert.ToString(tmpRezult));
+                        allTokens.RemoveAt(counter-1);
+                        allTokens.RemoveAt(counter-2);
+                        break;
+                    case "-":
+                        tmpRezult = double.Parse(allTokens[counter - 2])- 
+                            double.Parse(allTokens[counter - 1]);
+                        allTokens.RemoveAt(counter);
+                        allTokens.Insert(counter, Convert.ToString(tmpRezult));
+                        allTokens.RemoveAt(counter-1);
+                        allTokens.RemoveAt(counter-2);
+                        break;
+                    case "*":
+                        tmpRezult = double.Parse(allTokens[counter - 2])* 
+                            double.Parse(allTokens[counter - 1]);
+                        allTokens.RemoveAt(counter);
+                        allTokens.Insert(counter, Convert.ToString(tmpRezult));
+                        allTokens.RemoveAt(counter-1);
+                        allTokens.RemoveAt(counter-2);
+                        break;
+                    case "/":
+                        tmpRezult = double.Parse(allTokens[counter - 2])/ 
+                            double.Parse(allTokens[counter - 1]);
+                        allTokens.RemoveAt(counter);
+                        allTokens.Insert(counter, Convert.ToString(tmpRezult));
+                        allTokens.RemoveAt(counter-1);
+                        allTokens.RemoveAt(counter-2);
+                        break;
+                }
+                counter = 0;
+            }
+            else
+            {
+                counter++;
+            }
+        }
+        return tmpRezult;
+    }
+}
