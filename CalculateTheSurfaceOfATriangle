@@ -1,0 +1,66 @@
+//Write methods that calculate the surface of a triangle by given:
+//Side and an altitude to it; Three sides; Two sides and an angle between them. Use System.Math.
+
+using System;
+
+class CalculateTheSurfaceOfATriangle
+{
+    static void Main()
+    {
+        Console.WriteLine("We can calculate the surface of a triangle by given:");
+        Console.WriteLine("1.Side and an altitude to it");
+        Console.WriteLine("2.Three sides");
+        Console.WriteLine("3.Two sides and an angle between them");
+        Console.Write("Your choice? (1,2,3):");
+        int usersChoice = int.Parse(Console.ReadLine());
+        double surface = 0;
+        switch (usersChoice)
+        {
+            case 1: 
+                Console.Write("Enter the length of the side:");
+                double side = double.Parse(Console.ReadLine());
+                Console.Write("Enter the length of the altitude to the same side:");
+                double altitude = double.Parse(Console.ReadLine());
+                surface = SurfaceBySideAndAltitude(side, altitude);
+                break;
+            case 2: 
+                Console.Write("Enter the length of the side A:");
+                double sideA = double.Parse(Console.ReadLine());
+                Console.Write("Enter the length of the side B:");
+                double sideB = double.Parse(Console.ReadLine());
+                Console.Write("Enter the length of the side C:");
+                double sideC = double.Parse(Console.ReadLine());
+                surface = SurfaceByThreeSides(sideA, sideB, sideC);
+                break;
+            case 3:
+                Console.Write("Enter the length of the first side:");
+                double firstSide = double.Parse(Console.ReadLine());
+                Console.Write("Enter the length of the second side:");
+                double secondSide = double.Parse(Console.ReadLine());
+                Console.Write("Enter the degrees of the angle between sides:");
+                double interiorAngle = double.Parse(Console.ReadLine());
+                surface = SurfaceByTwoSidesAndAngle(firstSide, secondSide, interiorAngle);
+                break;
+        }
+        Console.WriteLine("The surface of this triangle is {0}.",Math.Round(surface,2));
+    }
+
+    static double SurfaceBySideAndAltitude(double side, double altitude)
+    {
+        double surface = side * altitude / 2;
+        return surface;
+    }
+
+    static double SurfaceByThreeSides(double sideA, double sideB, double sideC) //Heron's formula
+    {
+        double semiperimeter = (sideA + sideB + sideC) / 2;
+        double surface = Math.Sqrt(semiperimeter * (semiperimeter - sideA) * (semiperimeter - sideB) * (semiperimeter - sideC));
+        return surface;
+    }
+
+    static double SurfaceByTwoSidesAndAngle(double sideA, double SideB, double angle)
+    {
+        double surface = sideA * SideB * Math.Sin(angle * (Math.PI / 180)) / 2;
+        return surface;
+    }
+}
