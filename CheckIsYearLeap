@@ -1,0 +1,35 @@
+//Write a program that reads a year from the console and checks whether it is a leap. Use DateTime.
+
+using System;
+
+class CheckIsYearLeap
+{
+    //using the rule for Gregorian calendar - see Wikipedia
+    static void Main()
+    {
+        Console.Write("Enter a random year (four digits):");
+        DateTime year = new DateTime(int.Parse(Console.ReadLine()));
+        //bool checkIsYearLeap = IsYearLeap(year); //using own method IsYearLeap
+        bool checkIsYearLeap = DateTime.IsLeapYear((int)year.Ticks); //using System.DateTime method
+        Console.Write("The year {0} ",year.Ticks);
+        Console.WriteLine(checkIsYearLeap?"is leap.":"is not leap.");
+    }
+
+    //making own method
+    static bool IsYearLeap(DateTime year)
+    {
+        bool isLeap = false;
+        if (year.Ticks%4==0)
+        {
+            if (year.Ticks%400==0)
+            {
+                isLeap = true;
+            }
+            else if (year.Ticks%100!=0)
+            {
+                isLeap = true;
+            }
+        }
+        return isLeap;
+    }
+}
